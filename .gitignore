@@ -1,2 +1,3 @@
 venv
 groupnest-frontend/node_modules
+groupnest/db.sqlite3
