@@ -23,16 +23,44 @@ class AddMemberView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
-        group = Group.objects.get(id=pk)
-        user = User.objects.get(username=request.data['username'])
+        try:
+            group = Group.objects.get(id=pk)
+        except Group.DoesNotExist:
+            return Response({"error": "Group not found"}, status=status.HTTP_404_NOT_FOUND)
+        if group.admin != request.user:
+            return Response({"error": "You are not the admin of this group"}, status=status.HTTP_403_FORBIDDEN)
+        username = request.data.get('username')
+        if not username:
+            return Response({"error": "Username is required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:   
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        if user in group.members.all():
+            return Response({"error": "User is already a member of this group"}, status=status.HTTP_400_BAD_REQUEST)
         group.members.add(user)
         return Response({"message": "User added to the group"}, status=status.HTTP_200_OK)
+        
     
 class RemoveMemberView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
-        group = Group.objects.get(id=pk)
-        user = User.objects.get(username=request.data['username'])
+        try:
+            group = Group.objects.get(id=pk)
+        except Group.DoesNotExist:
+            return Response({"error": "Group not found"}, status=status.HTTP_404_NOT_FOUND)
+        if group.admin != request.user:
+            return Response({"error": "You are not the admin of this group"}, status=status.HTTP_403_FORBIDDEN)
+        username = request.data.get('username')
+        if not username:
+            return Response({"error": "Username is required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        if user not in group.members.all():
+            return Response({"error": "User is not a member of this group"}, status=status.HTTP_400_BAD_REQUEST)
         group.members.remove(user)
         return Response({"message": "User removed from the group"}, status=status.HTTP_200_OK)
+
