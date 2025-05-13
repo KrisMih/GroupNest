@@ -13,10 +13,10 @@ class GroupSerializer(serializers.ModelSerializer):
 
     class Meta: 
         model = Group
-        fields = ['id', 'name', 'description', 'admin', 'members']
+        fields = ['id', 'name', 'description', 'admin', 'members', 'is_private']
 
 class GroupCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group 
-        fields = ['name', 'description']
+        fields = ['name', 'description', 'is_private']
 
