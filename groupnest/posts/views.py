@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from .models import Post
-from .Serializer import PostSerializer
+from .serializers import PostSerializer
 from groups.models import Group
 
 class PostListCreateView(generics.ListCreateAPIView):
