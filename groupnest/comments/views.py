@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import Comment
 from .serializers import CommentSerializer
 from posts.models import Post
@@ -15,18 +15,24 @@ class CommentListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         post_id = self.kwargs.get("post_id")
         try:
-            post = Post.objects.get(id=post_id)
+            post = Post.objects.get(id = post_id)
         except Post.DoesNotExist:
             raise ValidationError({"error": "Post not found"})
-        return Comment.objects.filter(post=post)
+        return Comment.objects.filter(post = post)
 
     def perform_create(self, serializer):
         post_id = self.kwargs.get('post_id')
         try:
-            post = Post.objects.get(id=post_id)
+            post = Post.objects.get(id = post_id)
         except Post.DoesNotExist:
             raise ValidationError({"error": "Post not found"})
-        serializer.save(author=self.request.user, post=post)
+
+        group = post.group
+        if self.request.user not in group.members.all():
+            raise PermissionDenied("You are not a member of this group!")
+
+        serializer.save(author = self.request.user, post = post)
+
 
 class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
@@ -34,20 +40,20 @@ class CommentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
+        comment_id = self.kwargs.get('pk')
         try:
-            comment = Comment.objects.get(id=self.kwargs.get('pk'))
+            return Comment.objects.get(id = comment_id)
         except Comment.DoesNotExist:
             raise ValidationError({"error": "Comment does not exist."})
-        return comment
 
     def perform_update(self, serializer):
         comment = self.get_object()
         if comment.author != self.request.user:
-            raise ValidationError({"error": "You cannot edit this comment"})
+            raise PermissionDenied("You are not the author of this comment.")
         serializer.save()
 
     def perform_destroy(self, instance):
         group = instance.post.group
         if instance.author != self.request.user and group.admin != self.request.user:
-            raise ValidationError({"error": "You cannot delete this comment"})
+            raise PermissionDenied("Only the author or group admin can delete this comment.")
         instance.delete()
