@@ -25,7 +25,7 @@ class PostListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         group_id = self.kwargs.get('group_id')
         try:
-            group = Group.objects.get(id=group_id)
+            group = Group.objects.get(id = group_id)
         except Group.DoesNotExist:
             raise ValidationError({"error": "Group not found"})
         if not (self.request.user in group.members.all() or self.request.user == group.admin):

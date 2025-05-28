@@ -8,9 +8,8 @@ class PostSerializer(serializers.ModelSerializer):
 
     title = serializers.CharField(required=True)
     content = serializers.CharField(required=True)
-    group = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all(), required=True)
 
     class Meta:
         model = Post
         fields = ['id', 'title', 'content', 'author', 'group', 'group_name', 'author_username']
-        read_only_fields = ['id', 'author', 'group_name', 'author_username']
+        read_only_fields = ['id', 'author', 'group_name', 'author_username', 'group']
