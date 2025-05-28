@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import PostListCreateView, PostListDestroyView, PostList
+from .views import PostListCreateView, PostListDestroyView
 
 urlpatterns = [
     path('posts/<int:group_id>/', PostListCreateView.as_view(), name='post-list-create'),    
