@@ -12,9 +12,18 @@ class PostListCreateView(generics.ListCreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
-    
+    def get_queryset(self):
+        group_id = self.kwargs.get('group_id')
+        try:
+            group = Group.objects.get(id=group_id)
+        except Group.DoesNotExist:
+            raise ValidationError({"error": "Group not found"})
+        if not (self.request.user in group.members.all() or self.request.user == group.admin):
+            raise ValidationError({"error": "You can't view the list of posts for a group you are not a member of"})
+        return Post.objects.filter(group__id=group_id)
+
     def perform_create(self, serializer):
-        group_id = self.request.data.get('group')
+        group_id = self.kwargs.get('group_id')
         try:
             group = Group.objects.get(id=group_id)
         except Group.DoesNotExist:
@@ -36,18 +45,4 @@ class PostListDestroyView(generics.DestroyAPIView):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
  
-
-class PostList(generics.ListAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated]
     
-    def get_queryset(self):
-        group_id = self.kwargs.get('group_id')
-        try:
-            group = Group.objects.get(id=group_id)
-        except Group.DoesNotExist:
-            raise ValidationError({"error": "Group not found"})
-        if not (self.request.user in group.members.all() or self.request.user == group.admin):
-            raise ValidationError({"error": "You can't view the list of posts for a group you are not a member of"})
-        return Post.objects.filter(group__id=group_id)
