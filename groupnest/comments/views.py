@@ -18,6 +18,11 @@ class CommentListCreateView(generics.ListCreateAPIView):
             post = Post.objects.get(id = post_id)
         except Post.DoesNotExist:
             raise ValidationError({"error": "Post not found"})
+        
+        group = post.group
+
+        if self.request.user not in group.members.all() and self.request.user != group.admin:
+            raise PermissionDenied("You are not a member or an admin of this group")
         return Comment.objects.filter(post = post)
 
     def perform_create(self, serializer):
@@ -28,8 +33,9 @@ class CommentListCreateView(generics.ListCreateAPIView):
             raise ValidationError({"error": "Post not found"})
 
         group = post.group
-        if self.request.user not in group.members.all():
-            raise PermissionDenied("You are not a member of this group!")
+
+        if self.request.user not in group.members.all() and self.request.user != group.admin:
+            raise PermissionDenied("You are not a member or an admin of this group")
 
         serializer.save(author = self.request.user, post = post)
 
