@@ -3,7 +3,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import Post
 from .serializers import PostSerializer
 from groups.models import Group
@@ -19,7 +19,7 @@ class PostListCreateView(generics.ListCreateAPIView):
         except Group.DoesNotExist:
             raise ValidationError({"error": "Group not found"})
         if not (self.request.user in group.members.all() or self.request.user == group.admin):
-            raise ValidationError({"error": "You can't view the list of posts for a group you are not a member of"})
+            raise PermissionDenied({"error": "You can't view the list of posts for a group you are not a member of"})
         return Post.objects.filter(group_id = group_id)
 
     def perform_create(self, serializer):
@@ -29,7 +29,7 @@ class PostListCreateView(generics.ListCreateAPIView):
         except Group.DoesNotExist:
             raise ValidationError({"error": "Group not found"})
         if not (self.request.user in group.members.all() or self.request.user == group.admin):
-            raise ValidationError({"error": "You are not a member or an admin of this group!"})
+            raise PermissionDenied({"error": "You are not a member or an admin of this group!"})
         serializer.save(author=self.request.user, group=group)
 
 class PostListDestroyView(generics.DestroyAPIView):
@@ -41,7 +41,7 @@ class PostListDestroyView(generics.DestroyAPIView):
         instance = self.get_object()
         group = instance.group
         if not (request.user == instance.author or request.user == group.admin):
-            raise ValidationError({"error": "You can't delete this post."})
+            raise PermissionDenied({"error": "You can't delete this post."})
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
  
