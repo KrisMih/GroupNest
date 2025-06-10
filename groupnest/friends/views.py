@@ -5,7 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import FriendRequest
-from .serializers import FriendRequestSerializer
+from .serializers import FriendRequestSerializer, UserSerializer
+from django.db.models import Q
 
 User = get_user_model()
 
@@ -28,6 +29,17 @@ class FriendRequestCreateView(generics.CreateAPIView):
         if FriendRequest.objects.filter(from_user=to_user, to_user=self.request.user, accepted=True).exists():
             raise ValidationError({"error": "You are already friends."})
         serializer.save(from_user=self.request.user, to_user=to_user)
+
+class FriendListView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        accepted_requests = FriendRequest.objects.filter(accepted = True).filter(Q (from_user = self.request.user) | Q(to_user = self.request.user))
+        friend_ids = [
+            fr.to_user.id if fr.from_user == self.request.user else fr.from_user.id
+            for fr in accepted_requests
+        ]
+        return User.objects.filter(id__in=friend_ids).exclude(id=self.request.user.id)
 
 class FriendRequestListView(generics.ListAPIView):
     serializer_class = FriendRequestSerializer
