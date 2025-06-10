@@ -19,6 +19,38 @@ class GroupDetailView(generics.RetrieveAPIView):
     serializer_class = GroupSerializer
     permission_classes = [IsAuthenticated]
 
+class DeleteGroupView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+
+    def delete(self, request, pk):
+        try:
+            group = Group.objects.get(id=pk)
+        except Group.DoesNotExist:
+            return Response({"error": "Group not found"}, status=status.HTTP_404_NOT_FOUND)
+        if group.admin != request.user:
+            return Response({"error": "You are not the admin of this group"}, status=status.HTTP_403_FORBIDDEN)
+        group.delete()
+        return Response({"message": "Group deleted successfully"}, status=status.HTTP_204_DELETE)
+
+class UpdateGroupView(generics.UpdateAPIView):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        try:
+            group = Group.objects.get(id=pk)
+        except Group.DoesNotExist:
+            return Response({"error": "Group not found"}, status=status.HTTP_404_NOT_FOUND)
+        if group.admin != request.user:
+            return Response({"error": "You are not the admin of this group"}, status=status.HTTP_403_FORBIDDEN)
+        serializer = self.get_serializer(group, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
 class AddMemberView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 

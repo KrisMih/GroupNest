@@ -4,6 +4,8 @@ from . import views
 urlpatterns = [
     path('groups/', views.GroupListCreateView.as_view(), name='group-list-create'),  
     path('groups/<int:pk>/', views.GroupDetailView.as_view(), name='group-detail'),  
+    path('groups/<int:pk>/delete/', views.DeleteGroupView.as_view(), name='group-delete'),
+    path('groups/<int:pk>/edit/', views.UpdateGroupView.as_view(), name='group-edit'),
     path('groups/<int:pk>/add_member/', views.AddMemberView.as_view(), name='add-member'), 
     path('groups/<int:pk>/remove_member/', views.RemoveMemberView.as_view(), name='remove-member'),
     path('groups/<int:pk>/join/', views.JoinGroupView.as_view(), name='join-group'),
