@@ -32,7 +32,7 @@ class DeleteGroupView(generics.DestroyAPIView):
         if group.admin != request.user:
             return Response({"error": "You are not the admin of this group"}, status=status.HTTP_403_FORBIDDEN)
         group.delete()
-        return Response({"message": "Group deleted successfully"}, status=status.HTTP_204_DELETE)
+        return Response({"message": "Group deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 class UpdateGroupView(generics.UpdateAPIView):
     queryset = Group.objects.all()
