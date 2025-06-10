@@ -7,6 +7,7 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from .models import Post
 from .serializers import PostSerializer
 from groups.models import Group
+from notifications.models import Notification
 
 class PostListCreateView(generics.ListCreateAPIView):
     queryset = Post.objects.all()
@@ -30,7 +31,11 @@ class PostListCreateView(generics.ListCreateAPIView):
             raise ValidationError({"error": "Group not found"})
         if not (self.request.user in group.members.all() or self.request.user == group.admin):
             raise PermissionDenied({"error": "You are not a member or an admin of this group!"})
-        serializer.save(author=self.request.user, group=group)
+        post = serializer.save(author=self.request.user, group=group)
+        members_to_notify = group.members.exclude(id=self.request.user.id)
+        for member in members_to_notify:
+            Notification.objects.create(user=member, post=post)
+
 
 class PostUpdateView(generics.UpdateAPIView):
     queryset = Post.objects.all()

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'posts',
     'users',
     'friends',
+    'notifications',
     'rest_framework',
     'rest_framework_simplejwt',
 ]
