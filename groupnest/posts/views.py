@@ -18,7 +18,7 @@ class PostListCreateView(generics.ListCreateAPIView):
             group = Group.objects.get(id=group_id)
         except Group.DoesNotExist:
             raise ValidationError({"error": "Group not found"})
-        if not (self.request.user in group.members.all() or self.request.user != group.admin):
+        if not (self.request.user in group.members.all() or self.request.user == group.admin):
             raise ValidationError({"error": "You can't view the list of posts for a group you are not a member of"})
         return Post.objects.filter(group_id = group_id)
 

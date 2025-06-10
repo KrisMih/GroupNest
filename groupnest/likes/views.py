@@ -21,7 +21,7 @@ class LikeCreateView(generics.CreateAPIView):
         
         group = post.group
         
-        if self.request.user not in group.members.all():
+        if not (self.request.user in group.members.all() or self.request.user == group.admin):
             raise PermissionDenied({"error": "You are not member of this group!"})
         
         if Like.objects.filter(user = self.request.user, post = post).exists():
@@ -32,7 +32,7 @@ class LikeCreateView(generics.CreateAPIView):
 class LikeDestroyView(generics.DestroyAPIView):
     serializer_class = LikeSerializer
     permission_classes = [IsAuthenticated]
-    queryset = Like.objects.all
+    queryset = Like.objects.all()
     
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
