@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'likes',
     'posts',
     'users',
+    'friends',
     'rest_framework',
     'rest_framework_simplejwt',
 ]

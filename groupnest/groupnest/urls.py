@@ -23,5 +23,6 @@ urlpatterns = [
     path('api/v1/', include('groups.urls')),
     path('api/v1/', include('posts.urls')),
     path('api/v1/', include('comments.urls')),
-    path('api/v1/', include('likes.urls'))
+    path('api/v1/', include('likes.urls')),
+    path('api/v1/', include('friends.urls'))
 ]
