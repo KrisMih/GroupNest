@@ -43,3 +43,11 @@ class LikeDestroyView(generics.DestroyAPIView):
         
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class LikeListView(generics.ListAPIView):
+    serializer_class = LikeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        post_id = self.kwargs.get('post_id')
+        return Like.objects.filter(post__id=post_id)
