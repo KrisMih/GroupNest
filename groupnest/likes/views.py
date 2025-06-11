@@ -32,17 +32,24 @@ class LikeCreateView(generics.CreateAPIView):
 class LikeDestroyView(generics.DestroyAPIView):
     serializer_class = LikeSerializer
     permission_classes = [IsAuthenticated]
-    queryset = Like.objects.all()
-    
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        post = instance.post
-        group = post.group
-        if self.request.user != instance.user:
-            raise PermissionDenied({"error": "You are not the person who liked the post"})
+
+    def get_object(self):
+        post_id = self.kwargs.get('post_id')
+        try:
+            post = Post.objects.get(id=post_id)
+        except Post.DoesNotExist:
+            raise ValidationError({"error": "Post not found"})
         
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        group = post.group
+        if self.request.user not in group.members.all() and self.request.user != group.admin:
+            raise PermissionDenied({"error": "You are not allowed to unlike this post"})
+
+        try:
+            like = Like.objects.get(post=post, user=self.request.user)
+        except Like.DoesNotExist:
+            raise ValidationError({"error": "You haven't liked this post"})
+        
+        return like
     
 class LikeListView(generics.ListAPIView):
     serializer_class = LikeSerializer
@@ -50,4 +57,13 @@ class LikeListView(generics.ListAPIView):
 
     def get_queryset(self):
         post_id = self.kwargs.get('post_id')
-        return Like.objects.filter(post__id=post_id)
+        try:
+            post = Post.objects.get(id = post_id)
+        except Post.DoesNotExist:
+            raise ValidationError({"error": "Post not found"})
+    
+        group = post.group
+        if not (self.request.user in group.members.all() or self.request.user == group.admin):
+            raise PermissionDenied({"error": "You are not member of this group!"})
+
+        return Like.objects.filter(post = post)

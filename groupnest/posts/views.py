@@ -36,6 +36,18 @@ class PostListCreateView(generics.ListCreateAPIView):
         for member in members_to_notify:
             Notification.objects.create(user=member, post=post)
 
+class PostListView(generics.RetrieveAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        post = super().get_object()
+        group = post.group
+        if not (self.request.user in group.members.all() or self.request.user == group.admin):
+            raise PermissionDenied({"error": "You are not a member or an admin of this group!"})
+        Notification.objects.filter(user=self.request.user, post=post).delete()
+        return post
 
 class PostUpdateView(generics.UpdateAPIView):
     queryset = Post.objects.all()
